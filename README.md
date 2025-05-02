@@ -3,15 +3,25 @@
 📌 Table of Contents
 
 Project Overview
+
 Key Features
+
 Technical Architecture
+
 Installation & Setup
+
 Usage
+
 Model Performance
+
 Future Enhancements
+
 Contributing
+
 License
+
 References
+
 
 
 
