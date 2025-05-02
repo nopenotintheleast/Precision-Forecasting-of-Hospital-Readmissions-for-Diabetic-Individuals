@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-800">User Profile</h1>
+    
+    <!-- Only show profile-specific flash messages here -->
+    {% with messages = get_flashed_messages(category_filter=["password", "email", "delete", "profile"]) %}
+        {% if messages %}
+            <div class="space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 text-sm rounded-lg 
+                        {% if 'error' in message.lower() or 'incorrect' in message.lower() %}bg-red-100 text-red-700
+                        {% else %}bg-green-100 text-green-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <div class="bg-white p-6 rounded-lg shadow">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- User Info Section -->
+            <div>
+                <h2 class="text-lg font-medium text-gray-700 mb-4">Personal Information</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">First Name</p>
+                        <p class="font-medium">{{ user.first_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Last Name</p>
+                        <p class="font-medium">{{ user.last_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Email</p>
+                        <p class="font-medium">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Username</p>
+                        <p class="font-medium">{{ user.username }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Account Created</p>
+                        <p class="font-medium">{{ user.created_at }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Actions Section -->
+            <div>
+                <h2 class="text-lg font-medium text-gray-700 mb-4">Account Actions</h2>
+                <div class="space-y-4">
+                    <button onclick="openModal('changePasswordModal')"
+                            class="w-full text-left px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                        <i class="fas fa-key mr-2"></i> Change Password
+                    </button>
+                    
+                    <button onclick="openModal('updateEmailModal')"
+                            class="w-full text-left px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-envelope mr-2"></i> Update Email
+                    </button>
+                    
+                    <button onclick="openModal('deleteAccountModal')"
+                            class="w-full text-left px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                        <i class="fas fa-trash-alt mr-2"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="closeModal('changePasswordModal')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-lg font-bold mb-4">Change Password</h3>
+            
+            <form method="POST" action="{{ url_for('change_password') }}">
+                {{ change_password_form.hidden_tag() }}
+                <div class="space-y-4">
+                    <div>
+                        {{ change_password_form.current_password.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ change_password_form.current_password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        {% for error in change_password_form.current_password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        {{ change_password_form.new_password.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ change_password_form.new_password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+                        {% for error in change_password_form.new_password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        {{ change_password_form.confirm_password.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ change_password_form.confirm_password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        {% for error in change_password_form.confirm_password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('changePasswordModal')"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    {{ change_password_form.submit(class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Email Modal -->
+<div id="updateEmailModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="closeModal('updateEmailModal')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-lg font-bold mb-4">Update Email Address</h3>
+            
+            <form method="POST" action="{{ url_for('update_email') }}">
+                {{ update_email_form.hidden_tag() }}
+                <div class="space-y-4">
+                    <div>
+                        {{ update_email_form.current_password.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ update_email_form.current_password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        {% for error in update_email_form.current_password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        {{ update_email_form.new_email.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ update_email_form.new_email(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        {% for error in update_email_form.new_email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('updateEmailModal')"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    {{ update_email_form.submit(class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="deleteAccountModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="closeModal('deleteAccountModal')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-lg font-bold mb-4">Delete Account</h3>
+            <p class="text-red-600 mb-4">This action cannot be undone. All your data will be permanently deleted.</p>
+            
+            <form method="POST" action="{{ url_for('delete_account') }}">
+                {{ delete_account_form.hidden_tag() }}
+                <div class="space-y-4">
+                    <div>
+                        {{ delete_account_form.current_password.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ delete_account_form.current_password(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500") }}
+                        {% for error in delete_account_form.current_password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="flex items-center">
+                        {{ delete_account_form.confirm_delete(class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded") }}
+                        <label for="confirm_delete" class="ml-2 block text-sm text-gray-700">
+                            I understand this action is irreversible
+                        </label>
+                        {% for error in delete_account_form.confirm_delete.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('deleteAccountModal')"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    {{ delete_account_form.submit(class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal management
+let currentOpenModal = null;
+
+function openModal(modalId) {
+    // Close any currently open modal
+    if (currentOpenModal) {
+        closeModal(currentOpenModal);
+    }
+    
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        currentOpenModal = modalId;
+        window.location.hash = modalId;
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        if (currentOpenModal === modalId) {
+            currentOpenModal = null;
+        }
+        if (window.location.hash === '#' + modalId) {
+            history.replaceState(null, null, ' ');
+        }
+    }
+}
+
+// Initialize modals based on URL hash
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.substring(1);
+    if (hash && ['changePasswordModal', 'updateEmailModal', 'deleteAccountModal'].includes(hash)) {
+        openModal(hash);
+    }
+
+    // Close modal when clicking outside content
+    document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal(this.id);
+            }
+        });
+    });
+});
+
+// Close modals with escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && currentOpenModal) {
+        closeModal(currentOpenModal);
+    }
+});
+</script>
+
+<style>
+/* Modal styles */
+[id$="Modal"] {
+    transition: opacity 0.3s ease;
+}
+
+/* Background overlay */
+.bg-opacity-50 {
+    opacity: 0.5;
+}
+
+/* Prevent scrolling when modal is open */
+.overflow-hidden {
+    overflow: hidden;
+}
+
+/* Close button styling */
+.absolute.top-4.right-4 {
+    top: 1rem;
+    right: 1rem;
+}
+</style>
+{% endblock %}

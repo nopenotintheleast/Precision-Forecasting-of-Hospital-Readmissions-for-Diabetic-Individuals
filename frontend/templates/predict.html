@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-800">Predict Readmission Risk</h1>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form Column -->
+        <div class="bg-white p-6 rounded-lg shadow lg:col-span-2">
+            <form method="POST" action="{{ url_for('predict') }}" id="predictionForm">
+                {{ form.hidden_tag() }}
+                
+                <!-- Demographic Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Demographic Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Age -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="age">Age Group</label>
+                            <select name="age" id="age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Age</option>
+                                {% set age_groups = ['[0-10)', '[10-20)', '[20-30)', '[30-40)', '[40-50)', '[50-60)', '[60-70)', '[70-80)', '[80-90)', '[90-100)'] %}
+                                {% for age in age_groups %}
+                                <option value="{{ age }}" 
+                                    {% if request.method == 'POST' and request.form['age'] == age %}selected{% endif %}>
+                                    {{ age|replace('[','')|replace(')','') }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Gender -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="gender">Gender</label>
+                            <select name="gender" id="gender" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                {% set genders = ['Female', 'Male', 'Other'] %}
+                                {% for gender in genders %}
+                                <option value="{{ gender }}"
+                                    {% if request.method == 'POST' and request.form['gender'] == gender %}selected{% endif %}>
+                                    {{ gender }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Race -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="race">Race</label>
+                            <select name="race" id="race" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Race</option>
+                                {% set races = ['Caucasian', 'African American', 'Asian', 'Hispanic', 'Other', 'Unknown'] %}
+                                {% for race in races %}
+                                <option value="{{ race }}"
+                                    {% if request.method == 'POST' and request.form['race'] == race %}selected{% endif %}>
+                                    {{ race }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hospital Stay Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Hospital Stay Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Time in Hospital -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="time_in_hospital">Days in Hospital</label>
+                            <input type="number" name="time_in_hospital" id="time_in_hospital" min="1" max="14" 
+                                   value="{{ request.form['time_in_hospital'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <!-- Number of Lab Procedures -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="num_lab_procedures">Lab Procedures</label>
+                            <input type="number" name="num_lab_procedures" id="num_lab_procedures" min="1" max="100" 
+                                   value="{{ request.form['num_lab_procedures'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <!-- Admission Type -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="admission_type_id">Admission Type</label>
+                            <select name="admission_type_id" id="admission_type_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Type</option>
+                                {% set admission_types = [(1, 'Emergency'), (2, 'Urgent'), (3, 'Elective'), (4, 'Newborn'), (5, 'Trauma'), (6, 'Other')] %}
+                                {% for type_id, type_name in admission_types %}
+                                <option value="{{ type_id }}"
+                                    {% if request.method == 'POST' and request.form['admission_type_id'] == type_id|string %}selected{% endif %}>
+                                    {{ type_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Admission Source -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="admission_source_id">Admission Source</label>
+                            <select name="admission_source_id" id="admission_source_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Source</option>
+                                {% set admission_sources = [(1, 'Physician Referral'), (2, 'Clinic Referral'), (3, 'HMO Referral'), (4, 'Transfer'), (5, 'Other'), (7, 'Emergency Room')] %}
+                                {% for source_id, source_name in admission_sources %}
+                                <option value="{{ source_id }}"
+                                    {% if request.method == 'POST' and request.form['admission_source_id'] == source_id|string %}selected{% endif %}>
+                                    {{ source_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Discharge Disposition -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="discharge_disposition_id">Discharge To</label>
+                            <select name="discharge_disposition_id" id="discharge_disposition_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Disposition</option>
+                                {% set discharge_types = [(1, 'Home'), (2, 'Transfer to Hospital'), (3, 'SNF'), (4, 'ICF'), (5, 'Other')] %}
+                                {% for disp_id, disp_name in discharge_types %}
+                                <option value="{{ disp_id }}"
+                                    {% if request.method == 'POST' and request.form['discharge_disposition_id'] == disp_id|string %}selected{% endif %}>
+                                    {{ disp_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Diagnosis Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Primary Diagnosis -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="diag_1">Primary Diagnosis</label>
+                            <select name="diag_1" id="diag_1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Diagnosis</option>
+                                {% set diagnoses = ['Diabetes', 'Hypertension', 'COPD', 'Heart Failure', 'Other', 'Unknown'] %}
+                                {% for diag in diagnoses %}
+                                <option value="{{ diag }}"
+                                    {% if request.method == 'POST' and request.form['diag_1'] == diag %}selected{% endif %}>
+                                    {{ diag }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Secondary Diagnosis -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="diag_2">Secondary Diagnosis</label>
+                            <select name="diag_2" id="diag_2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Diagnosis</option>
+                                {% set diagnoses = ['Diabetes', 'Hypertension', 'COPD', 'Other', 'Unknown'] %}
+                                {% for diag in diagnoses %}
+                                <option value="{{ diag }}"
+                                    {% if request.method == 'POST' and request.form['diag_2'] == diag %}selected{% endif %}>
+                                    {{ diag }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Additional Diagnosis -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="diag_3">Additional Diagnosis</label>
+                            <select name="diag_3" id="diag_3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Diagnosis</option>
+                                {% set diagnoses = ['Diabetes', 'Hypertension', 'Other', 'Unknown'] %}
+                                {% for diag in diagnoses %}
+                                <option value="{{ diag }}"
+                                    {% if request.method == 'POST' and request.form['diag_3'] == diag %}selected{% endif %}>
+                                    {{ diag }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Number of Diagnoses -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="number_diagnoses">Number of Diagnoses</label>
+                            <input type="number" name="number_diagnoses" id="number_diagnoses" min="1" max="20" 
+                                   value="{{ request.form['number_diagnoses'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Results -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Test Results</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- A1C Result -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="A1Cresult">A1C Result</label>
+                            <select name="A1Cresult" id="A1Cresult" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Result</option>
+                                {% set a1c_results = ['None', 'Norm', '>7', '>8'] %}
+                                {% for result in a1c_results %}
+                                <option value="{{ result }}"
+                                    {% if request.method == 'POST' and request.form['A1Cresult'] == result %}selected{% endif %}>
+                                    {% if result == '>7' %}>7%
+                                    {% elif result == '>8' %}>8%
+                                    {% else %}{{ result }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Max Glucose Serum -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="max_glu_serum">Max Glucose Serum</label>
+                            <select name="max_glu_serum" id="max_glu_serum" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Result</option>
+                                {% set glucose_results = ['None', 'Norm', '>200', '>300'] %}
+                                {% for result in glucose_results %}
+                                <option value="{{ result }}"
+                                    {% if request.method == 'POST' and request.form['max_glu_serum'] == result %}selected{% endif %}>
+                                    {% if result == '>200' %}>200 mg/dL
+                                    {% elif result == '>300' %}>300 mg/dL
+                                    {% else %}{{ result }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visit History -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Visit History</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Inpatient Visits -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="number_inpatient">Inpatient Visits</label>
+                            <input type="number" name="number_inpatient" id="number_inpatient" min="0" max="20" 
+                                   value="{{ request.form['number_inpatient'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <!-- Emergency Visits -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="number_emergency">Emergency Visits</label>
+                            <input type="number" name="number_emergency" id="number_emergency" min="0" max="20" 
+                                   value="{{ request.form['number_emergency'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <!-- Outpatient Visits -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="number_outpatient">Outpatient Visits</label>
+                            <input type="number" name="number_outpatient" id="number_outpatient" min="0" max="20" 
+                                   value="{{ request.form['number_outpatient'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medication Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Medication Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Change of Medication -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="change">Medication Changed?</label>
+                            <select name="change" id="change" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Option</option>
+                                {% set change_options = ['No', 'Yes'] %}
+                                {% for option in change_options %}
+                                <option value="{{ option }}"
+                                    {% if request.method == 'POST' and request.form['change'] == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Diabetes Medication -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="diabetesMed">Diabetes Meds?</label>
+                            <select name="diabetesMed" id="diabetesMed" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="" disabled selected>Select Option</option>
+                                {% set diabetes_options = ['No', 'Yes'] %}
+                                {% for option in diabetes_options %}
+                                <option value="{{ option }}"
+                                    {% if request.method == 'POST' and request.form['diabetesMed'] == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Number of Medications -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="num_medications">Total Medications</label>
+                            <input type="number" name="num_medications" id="num_medications" min="1" max="50" 
+                                   value="{{ request.form['num_medications'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        
+                        <!-- Number of Procedures -->
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="num_procedures">Procedures</label>
+                            <input type="number" name="num_procedures" id="num_procedures" min="0" max="20" 
+                                   value="{{ request.form['num_procedures'] if request.method == 'POST' else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                </div>
+
+<!-- Diabetes Medications -->
+<div class="mb-6">
+    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Diabetes Medications</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
+        {% set medications = ['metformin', 'insulin', 'glyburide', 'acarbose', 'acetohexamide', 
+                              'chlorpropamide', 'glimepiride', 'glipizide', 'glyburide-metformin', 
+                              'glipizide-metformin', 'pioglitazone', 'rosiglitazone', 'troglitazone', 
+                              'tolazamide', 'tolbutamide', 'miglitol', 'nateglinide', 'repaglinide', 
+                              'citoglipton', 'examide', 'metformin-pioglitazone', 'metformin-rosiglitazone'] %}
+        {% for med in medications %}
+        <div class="flex flex-col space-y-1 min-w-[120px]">
+            <label class="block text-gray-700 text-sm font-medium capitalize truncate" 
+                   for="{{ med }}" 
+                   title="{{ med.replace('-', ' ') }}">
+                {{ med.replace('-', ' ') }}
+            </label>
+            <input type="number" 
+                   name="{{ med }}" 
+                   id="{{ med }}" 
+                   min="0" 
+                   max="1" 
+                   value="{{ request.form[med] if request.method == 'POST' and med in request.form else '' }}"
+                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                   required>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+                <div class="mt-6">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                        Calculate Readmission Risk
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Results Column -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Prediction Results</h2>
+            {% if result and result.prediction %}
+                <div class="space-y-4" id="resultsSection">
+                    <!-- Prediction Card -->
+                    <div class="p-4 rounded-lg 
+                                {% if result.prediction == 'High Risk' %}
+                                    bg-red-50 text-red-800 border border-red-200
+                                {% else %}
+                                    bg-green-50 text-green-800 border border-green-200
+                                {% endif %}">
+                        <h3 class="font-bold text-lg">Prediction:</h3>
+                        <p class="text-2xl font-bold">{{ result.prediction }}</p>
+                    </div>
+                    
+                    <!-- Probability Card -->
+                    <div class="p-4 bg-blue-50 rounded-lg text-blue-800 border border-blue-200">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold">Probability:</h3>
+                                <p class="text-2xl font-bold">{{ result.probability }}</p>
+                            </div>
+                            <div class="w-24 h-4 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full {% if result.prediction == 'High Risk' %}bg-red-500{% else %}bg-green-500{% endif %}" 
+                                     style="width: {{ result.probability.replace('%','') }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Threshold Card -->
+                    <div class="p-4 bg-gray-50 rounded-lg text-gray-800 border border-gray-200">
+                        <h3 class="font-bold">Threshold:</h3>
+                        <p class="text-lg">≥ {{ result.threshold }} probability is considered high risk</p>
+                    </div>
+                    
+                    <!-- Feature Importance -->
+                    {% if result.feature_importance %}
+                    <div class="p-4 bg-purple-50 rounded-lg text-purple-800 border border-purple-200">
+                        <h3 class="font-bold mb-2">Key Contributing Factors:</h3>
+                        <div class="space-y-2">
+                            {% for feature, importance in result.feature_importance.items() %}
+                                <div class="flex items-center">
+                                    <div class="w-3/4 truncate">
+                                        {{ feature|replace('_',' ')|title }}
+                                    </div>
+                                    <div class="w-1/4">
+                                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div class="h-full bg-purple-500" style="width: {{ (importance * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <button class="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors" onclick="printResults()">
+                            <i class="fas fa-print mr-2"></i>Print Results
+                        </button>
+                        <button class="bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700 transition-colors" onclick="resetForm()">
+                            <i class="fas fa-redo mr-2"></i>Reset Form
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                    <i class="fas fa-chart-line text-4xl mb-4 text-gray-400"></i>
+                    <p class="text-lg">Submit patient information to calculate readmission risk</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+// Form Validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    let isValid = true;
+    const requiredFields = this.querySelectorAll('[required]');
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('border-red-500');
+            isValid = false;
+        } else {
+            field.classList.remove('border-red-500');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+    }
+});
+
+// Print Results Function
+function printResults() {
+    const printContent = document.getElementById('resultsSection').innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = `
+        <div class="p-4">
+            <h1 class="text-2xl font-bold mb-4">Readmission Risk Prediction Results</h1>
+            ${printContent}
+            <div class="mt-4 text-sm text-gray-500">
+                Printed on: ${new Date().toLocaleString()}
+            </div>
+        </div>
+    `;
+    
+    window.print();
+    document.body.innerHTML = originalContent;
+}
+
+// Reset Form Function
+function resetForm() {
+    if(confirm('Are you sure you want to reset the form?')) {
+        document.getElementById('predictionForm').reset();
+        window.location.href = "{{ url_for('predict') }}";
+    }
+}
+
+// Initialize medication field highlighting
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type=\"number\"]').forEach(input => {
+        // Set up change handler
+        input.addEventListener('change', function() {
+            if (this.value > 0) {
+                this.classList.add('border-green-500', 'bg-green-50');
+            } else {
+                this.classList.remove('border-green-500', 'bg-green-50');
+            }
+        });
+        
+        // Initialize current values
+        if (input.value > 0) {
+            input.classList.add('border-green-500', 'bg-green-50');
+        }
+    });
+});
+</script>
+
+<!-- Styles -->
+<style>
+/* Form validation styling */
+.border-red-500 {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Medication active state */
+.border-green-500 {
+    border-color: #10b981;
+}
+.bg-green-50 {
+    background-color: #ecfdf5;
+}
+
+/* Print styling */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #resultsSection, #resultsSection * {
+        visibility: visible;
+    }
+    #resultsSection {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Medication grid improvements */
+.min-w-[120px] {
+    min-width: 120px;
+}
+
+.gap-y-6 {
+    row-gap: 1.5rem;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 640px) and (max-width: 1024px) {
+    .sm\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .lg\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetic Readmission Predictor</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+</head>
+<body class="h-full">
+    <div class="min-h-full flex">
+        <!-- Mobile sidebar toggle button -->
+        <button id="mobile-menu-button" class="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="hidden md:flex md:flex-shrink-0 bg-white border-r border-gray-200 fixed h-full w-56">
+            <div class="flex flex-col w-full">
+                <div class="h-16 flex items-center justify-center px-4 border-b border-gray-200">
+                    <a href="{{ url_for('dashboard') }}" class="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                        <i class="fas fa-heartbeat mr-2"></i> Diabetic Readmission
+                    </a>
+                </div>
+                <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt mr-3 w-5 text-center"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('predict') }}" class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">
+                        <i class="fas fa-heartbeat mr-3 w-5 text-center"></i> Predict
+                    </a>
+                    <a href="{{ url_for('visualizations') }}" class="nav-link {% if request.endpoint == 'visualizations' %}active{% endif %}">
+                        <i class="fas fa-chart-bar mr-3 w-5 text-center"></i> Insights
+                    </a>
+                    <div class="pt-4 mt-4 border-t border-gray-200">
+                        <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+                            <i class="fas fa-user-circle mr-3 w-5 text-center"></i> Profile
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="nav-link text-red-600 hover:text-red-700">
+                            <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i> Logout
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Mobile sidebar overlay -->
+        <div id="mobile-overlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 z-40"></div>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col md:ml-56">
+            <!-- Top navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="px-6 py-4 flex items-center justify-between">
+                    <!-- Website title (left side) -->
+                    <div class="flex items-center">
+                        <h1 class="text-lg font-semibold text-gray-800">Diabetic Readmission Predictor</h1>
+                    </div>
+        
+                    <!-- User profile (right side) -->
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center focus:outline-none hover:bg-gray-100 rounded-full p-1 transition-colors">
+                                <span class="mr-2 text-gray-700 hidden sm:inline font-medium">
+                                    {{ current_user.first_name }} {{ current_user.last_name }}
+                                </span>
+                                <img class="h-8 w-8 rounded-full border border-gray-200 hover:border-gray-300 transition-colors" 
+                                src="https://ui-avatars.com/api/?name={{ current_user.first_name }}+{{ current_user.last_name }}&background=random" 
+                                alt="User profile">
+                            </button>
+
+                            <!-- Dropdown menu -->
+                            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div class="py-1">
+                                    <a href="{{ url_for('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
+                                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            // Toggle dropdown menu
+                            document.getElementById('user-menu-button').addEventListener('click', function() {
+                                document.getElementById('user-menu').classList.toggle('hidden');
+                            });
+        
+                            // Close dropdown when clicking outside
+                            document.addEventListener('click', function(event) {
+                                const menu = document.getElementById('user-menu');
+                                const button = document.getElementById('user-menu-button');
+                                if (!menu.contains(event.target) && !button.contains(event.target)) {
+                                    menu.classList.add('hidden');
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="px-6 pt-4 space-y-2">
+                        {% for category, message in messages %}
+                            <div class="p-4 text-sm rounded-lg 
+                                {% if category == 'danger' %}bg-red-100 text-red-700
+                                {% elif category == 'success' %}bg-green-100 text-green-700
+                                {% else %}bg-blue-100 text-blue-700{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page content -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    
+    <script>
+        // Mobile sidebar toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
+        });
+        
+        // Close mobile sidebar when clicking overlay
+        document.getElementById('mobile-overlay').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.add('hidden');
+            this.classList.add('hidden');
+        });
+
+        // Close mobile sidebar when clicking a nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 768) {
+                    document.getElementById('sidebar').classList.add('hidden');
+                    document.getElementById('mobile-overlay').classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

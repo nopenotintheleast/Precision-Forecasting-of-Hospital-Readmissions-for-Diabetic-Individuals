@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Visualizations</h1>
+        <div class="text-sm text-gray-500">
+            {{ visualizations|length }} visualizations available
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for viz in visualizations %}
+        <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow">
+            <a href="{{ url_for('view_visualization', filename=viz) }}" class="block">
+                <img src="{{ url_for('view_visualization', filename=viz) }}" 
+                     alt="{{ viz }}" class="w-full h-48 object-contain">
+            </a>
+            <div class="mt-4">
+                <h3 class="font-medium text-gray-800 mb-2">
+                    {{ viz.replace('.png', '').replace('_', ' ').title() }}
+                </h3>
+                <div class="flex justify-between items-center">
+                    <a href="{{ url_for('view_visualization', filename=viz) }}" 
+                       download="{{ viz }}"
+                       class="text-blue-600 hover:underline text-sm">
+                        <i class="fas fa-download mr-1"></i> Download
+                    </a>
+                    <span class="text-xs text-gray-500">
+                        {% set viz_path = ['static', 'visualizations', viz]|join('/') %}
+                        {% set file_size = (vizes[viz].st_size / 1024)|round(1) if vizes and viz in vizes else 0 %}
+                        {{ file_size }} KB
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
