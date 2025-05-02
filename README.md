@@ -3,24 +3,16 @@
 📌 Table of Contents
 
 Project Overview
-
 Key Features
-
 Technical Architecture
-
 Installation & Setup
-
 Usage
-
 Model Performance
-
 Future Enhancements
-
 Contributing
-
 License
-
 References
+
 
 
 🔍 Project Overview
@@ -34,6 +26,7 @@ Demographics (age, gender)
 
 Hospitalization history (prior admissions, length of stay)
 
+
 The web interface allows doctors to:
 
 ✅ Input patient data
@@ -41,6 +34,7 @@ The web interface allows doctors to:
 ✅ Get real-time risk predictions (High/Low Risk)
 
 ✅ View explainable AI insights (SHAP values)
+
 
 
 
@@ -59,8 +53,10 @@ Feature	Description
 🔒 Secure & Scalable	Modular design for future EHR integration
 
 
+
 🛠️ Technical Architecture
 ![drrps](https://github.com/user-attachments/assets/dc808d18-ee30-46b1-8a68-a503f3a9a6fc)
+
 
 Tech Stack
 
@@ -73,6 +69,7 @@ Frontend: HTML, CSS, JavaScript, Tailwind CSS
 Data Processing: Pandas, NumPy
 
 Visualization: Matplotlib, Seaborn
+
 
 
 ⚙️ Installation & Setup
@@ -107,6 +104,7 @@ python app.py init-db
 Access the web app at: http://localhost:5000
 
 
+
 📲 Usage
 
 ~Enter patient data via the web form.
@@ -127,6 +125,7 @@ Demo Screenshot
 ![prediction_success](https://github.com/user-attachments/assets/4db1cac5-8597-4853-ab54-2f90edd95371)
 
 
+
 📊 Model Performance
 
 ~Metric	Score
@@ -145,6 +144,7 @@ Demo Screenshot
 
 
 
+
 🚀 Future Enhancements
 
 ~EHR Integration (HL7/FHIR API)
@@ -154,6 +154,7 @@ Demo Screenshot
 ~Multi-disease prediction (Heart Failure, COPD)
 
 ~Patient-facing dashboard
+
 
 
 🤝 Contributing
@@ -171,9 +172,11 @@ Contributions are welcome!
 ~Open a Pull Request
 
 
+
 📜 License
 
-This project is licensed under MIT License.
+This project is licensed under Apache License 2.0.
+
 
 📚 References
 
@@ -182,6 +185,7 @@ Caruana et al. (2015). Intelligible Models for Healthcare
 Chen & Guestrin (2016). XGBoost: A Scalable Tree Boosting System
 
 Lundberg & Lee (2017). SHAP: A Unified Approach to Model Interpretability
+
 
 
 🌟 Star this repo if you find it useful!
