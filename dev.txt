@@ -1,0 +1,30 @@
+After cloning or downloading and extracting the zip file of this project follow these below steps to make sure the project can run smoothly!
+  step 1 : Run pip install -r requirements.txt
+  step 2 : go to env. file and make changes in the DATABASE_URL , SECRET_KEY , MAIL_USERNAME , MAIL_PASSWORD sections.
+    a. create a new database in the postgresql and name it diabetic_readmission
+    b. get to know the username and password(ussually username will be postgres)
+    c. next for how to get your MAIL_USERNAME and MAIL_PASSWORD:
+        For the email configuration in your .env file, you need to use a real Gmail account and an app password (not your regular Gmail password). Here's how to set it up:
+          1. MAIL_USERNAME
+              Use a real Gmail address (e.g., yourname@gmail.com).
+              Example:
+                env
+                MAIL_USERNAME=myappemail@gmail.com
+          2. MAIL_PASSWORD
+              Do NOT use your regular Gmail password!
+              Instead, generate an App Password:
+              Go to Google Account Security.
+              Enable 2-Step Verification (if not already enabled).
+              Under App Passwords, generate a new password for "Flask App".
+              Copy the 16-digit password and paste it in .env:
+                env
+                MAIL_PASSWORD=abcd efgh ijkl mnop  # Example (no spaces)
+    step 3 : make the same changes of database_url and secret key in the app.py file too
+    step 4 : to run the project:-
+      a. open terminal and navigate to backend folder
+          cd backend
+      b. then type in this command 
+          python app.py init-db
+      c. press enter. you will see the link, click on it and the project will start running in the browser!
+
+Happy coding!      
