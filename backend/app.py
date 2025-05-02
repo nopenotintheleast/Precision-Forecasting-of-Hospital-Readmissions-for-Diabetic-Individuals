@@ -20,8 +20,8 @@ app = Flask(__name__,
             static_folder=os.path.abspath('../frontend/static'))
 
 # Configuration
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'Hg8R5tS8tM')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:ananyaarp@localhost:5432/diabetic_readmission')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your_secret_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://username:password@localhost:5432/diabetic_readmission')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Fixed typo in 'TRACK_MODIFICATIONS'
 
 # Initialize extensions
