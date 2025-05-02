@@ -52,7 +52,7 @@ pip
 Steps
 1. Clone the repo
 bash
-git clone [https://github.com/yourusername/diabetic-readmission-prediction.git](https://github.com/nopenotintheleast/Precision-Forecasting-of-Hospital-Readmissions-for-Diabetic-Individuals.git)
+git clone https://github.com/nopenotintheleast/Precision-Forecasting-of-Hospital-Readmissions-for-Diabetic-Individuals.git
 cd diabetic-readmission-prediction
 
 2. Install dependencies
